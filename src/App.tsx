@@ -17,10 +17,8 @@ import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
-import Home from "./pages/Dashboard/Home";
 import Files from "./pages/Files";
 import FileUploader from "./pages/FileUploader";
-import Test from "./pages/Test";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 export default function App() {
@@ -46,7 +44,6 @@ export default function App() {
             <Route path="/buttons" element={<Buttons />} />
             <Route path="/images" element={<Images />} />
             <Route path="/videos" element={<Videos />} />
-            <Route path="/test" element={<Test />} />
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
           </Route>

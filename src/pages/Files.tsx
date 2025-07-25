@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Tab } from "@headlessui/react";
-import { AiOutlineUpload, AiOutlineSearch, AiFillFile } from "react-icons/ai";
+import { AiOutlineSearch, AiFillFile } from "react-icons/ai";
 import PageMeta from "../components/common/PageMeta";
 
-interface FileItem {
-  id: number;
-  name: string;
-  size: string;
-  uploaded: string;
-  category: string;
-}
+// interface FileItem {
+//   id: number;
+//   name: string;
+//   size: string;
+//   uploaded: string;
+//   category: string;
+// }
 
 interface FileRow {
   id: number;
@@ -45,15 +45,15 @@ const Files: React.FC = () => {
 
   
 
-  const allFiles: FileItem[] = [
-    { id: 1, name: "Captions.fig", size: "56MB", uploaded: "Feb 11, 2023", category: "Design" },
-    { id: 2, name: "Security.st.mp4", size: "33MB", uploaded: "Feb 11, 2023", category: "Video" },
-    { id: 3, name: "Illustrations.svg", size: "18MB", uploaded: "Feb 11, 2023", category: "Graphics" },
-    { id: 4, name: "Comments.fig", size: "20MB", uploaded: "Feb 11, 2023", category: "Design" },
-    { id: 5, name: "3Dmotions.rar", size: "32MB", uploaded: "Feb 10, 2023", category: "Archive" },
-    { id: 6, name: "Motions Audios.mp3", size: "46MB", uploaded: "Feb 10, 2023", category: "Audio" },
-    // ... potentially 100+ more categories
-  ];
+  // const allFiles: FileItem[] = [
+  //   { id: 1, name: "Captions.fig", size: "56MB", uploaded: "Feb 11, 2023", category: "Design" },
+  //   { id: 2, name: "Security.st.mp4", size: "33MB", uploaded: "Feb 11, 2023", category: "Video" },
+  //   { id: 3, name: "Illustrations.svg", size: "18MB", uploaded: "Feb 11, 2023", category: "Graphics" },
+  //   { id: 4, name: "Comments.fig", size: "20MB", uploaded: "Feb 11, 2023", category: "Design" },
+  //   { id: 5, name: "3Dmotions.rar", size: "32MB", uploaded: "Feb 10, 2023", category: "Archive" },
+  //   { id: 6, name: "Motions Audios.mp3", size: "46MB", uploaded: "Feb 10, 2023", category: "Audio" },
+  //   // ... potentially 100+ more categories
+  // ];
 
   const viewLabels = ["View all", "Your files", "Shared files"];
 
