@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
 import Select, { components, MultiValue, OptionProps } from "react-select";
@@ -7,6 +7,8 @@ import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import "react-circular-progressbar/dist/styles.css";
 
 type Category = { label: string; value: string };
+
+
 
 const CATEGORIES: Category[] = Array.from({ length: 120 }).map((_, i) => ({
   label: `Category ${i + 1}`,
@@ -43,6 +45,26 @@ const FileUploader: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [uploadResults, setUploadResults] = useState<(string | null)[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch(`${API_URL}/api/categories`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then(res => res.json())
+    .then(data =>  setCategories(data.map(
+      (c: any) => ({ label: c.categoryName, value: c.categoryName })
+    )));
+}, []);
+
+useEffect(() => {
+  console.log("categories UPDATED:", categories);
+}, [categories]);
+  
 
   // Файл нэмэх
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -243,7 +265,7 @@ const FileUploader: React.FC = () => {
           <div className="bg-white rounded-xl shadow-2xl p-6 w-[400px]">
             <h3 className="mb-2 text-lg font-bold">Select categories</h3>
             <Select
-              options={CATEGORIES}
+              options={categories}
               isMulti
               isSearchable
               closeMenuOnSelect={false}
