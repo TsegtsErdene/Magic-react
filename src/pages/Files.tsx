@@ -55,21 +55,32 @@ const Files: React.FC = () => {
   //   // ... potentially 100+ more categories
   // ];
 
-  const viewLabels = ["View all", "Your files", "Shared files"];
+const viewLabels = [
+  "Бүгд",
+  "Хүлээгдэж буй",
+  "Баталсан",
+  "Цуцалсан",
+  "Шаардлага хангаагүй"
+];
+const statusValues = [
+  "",
+  "Хүлээгдэж буй",
+  "Баталсан",
+  "Цуцалсан",
+  "Шаардлага хангаагүй"
+];
 
   const categories = Array.from(
     new Set(files.map((file) => file.category))
   ).sort();
 
-  const filteredFiles = files.filter((file) => {
-    const matchesSearch = file.filename
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "" || file.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
+const filteredFiles = files.filter((file) => {
+  const matchesSearch = file.filename.toLowerCase().includes(searchTerm.toLowerCase());
+  const matchesCategory = selectedCategory === "" || file.category === selectedCategory;
+  const matchesStatus =
+    statusValues[tabIndex] === "" || file.status === statusValues[tabIndex];
+  return matchesSearch && matchesCategory && matchesStatus;
+});
   return (
     <>
       <PageMeta title="Files" description="Browse and manage your files" />
@@ -95,7 +106,7 @@ const Files: React.FC = () => {
                 <Tab
                   key={idx}
                   className={({ selected }) =>
-                    `px-4 py-2 text-sm font-medium focus:outline-none ${
+                    `px-4 py-2 text-sm font-bold focus:outline-none ${
                       selected
                         ? 'bg-blue-100 text-blue-600 rounded-xl'
                         : 'text-gray-600 dark:text-gray-400'

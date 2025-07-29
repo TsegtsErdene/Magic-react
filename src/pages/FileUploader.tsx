@@ -10,10 +10,6 @@ type Category = { label: string; value: string };
 
 
 
-const CATEGORIES: Category[] = Array.from({ length: 120 }).map((_, i) => ({
-  label: `Category ${i + 1}`,
-  value: `cat${i + 1}`,
-}));
 
 interface UploadFile {
   file: File;
@@ -57,7 +53,7 @@ const FileUploader: React.FC = () => {
   })
     .then(res => res.json())
     .then(data =>  setCategories(data.map(
-      (c: any) => ({ label: c.categoryName, value: c.categoryName })
+      (c: any) => ({ label: c.CategoryName, value: c.CategoryName })
     )));
 }, []);
 
