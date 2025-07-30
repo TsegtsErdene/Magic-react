@@ -30,11 +30,11 @@ export default function App() {
         {/* Protected routes - зөвхөн login хийсэнд */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route index path="/" element={<FileUploader />} />
+            <Route index path="/" element={<Files />} />
             {/* Бусад page-ууд... */}
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
-            <Route path="/files" element={<Files />} />
+            <Route path="/upload" element={<FileUploader />} />
             <Route path="/blank" element={<Blank />} />
             <Route path="/form-elements" element={<FormElements />} />
             <Route path="/basic-tables" element={<BasicTables />} />
