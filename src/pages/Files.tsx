@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Tab } from "@headlessui/react";
-import { AiOutlineSearch, AiFillFile } from "react-icons/ai";
+import { AiOutlineSearch } from "react-icons/ai";
 import PageMeta from "../components/common/PageMeta";
 
 // interface FileItem {
@@ -10,7 +10,6 @@ import PageMeta from "../components/common/PageMeta";
 //   uploaded: string;
 //   category: string;
 // }
-
 interface FileRow {
   id: number;
   category: string;
@@ -18,6 +17,7 @@ interface FileRow {
   status: string;
   blobPath: string;
   uploadedAt: string;
+  comment?: string;
 }
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -149,49 +149,50 @@ const filteredFiles = files.filter((file) => {
         {/* File Table */}
         <div className="overflow-x-auto bg-white rounded-2xl shadow mt-6 dark:bg-gray-800">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th className="px-4 py-3">
-                  <input type="checkbox" className="h-4 w-4" />
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                  File name
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                  Last uploaded
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                  Category
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredFiles.map((file) => (
-                <tr key={file.id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
-                  <td className="px-4 py-3">
-                    <input type="checkbox" className="h-4 w-4" />
-                  </td>
-                  <td className="px-4 py-3 flex items-center space-x-2">
-                    <AiFillFile className="h-5 w-5 text-gray-400" />
-                    <span className="text-sm text-gray-700 dark:text-gray-100">
-                      {file.filename}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-100">
-                    {file.status}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-100">
-                    {file.uploadedAt}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-100">
-                    {file.category}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+           
+<thead className="bg-gray-50 dark:bg-gray-900">
+  <tr>
+    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+      File name
+    </th>
+    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+      Status
+    </th>
+    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+      Last uploaded
+    </th>
+    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+      Category
+    </th>
+    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+      Comment
+    </th>
+  </tr>
+</thead>
+<tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+  {filteredFiles.map((file) => (
+    <tr key={file.id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
+      <td className="px-4 py-3 flex items-center space-x-2">
+        
+        <span className="text-sm text-gray-700 dark:text-gray-100">
+          {file.filename}
+        </span>
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-100">
+        {file.status}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-100">
+        {file.uploadedAt}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-100">
+        {file.category}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-100">
+        {file.comment || ""}
+      </td>
+    </tr>
+  ))}
+</tbody>
           </table>
         </div>
       </div>
