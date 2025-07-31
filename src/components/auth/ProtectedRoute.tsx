@@ -1,14 +1,26 @@
 import { Navigate, Outlet } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
-export default function ProtectedRoute() {
-  // Token localStorage эсвэл context-оос уншиж болно
+const isTokenExpired = (token: string) => {
+  try {
+    const decoded: any = jwtDecode(token);
+    if (!decoded.exp) return true;
+    return Date.now() >= decoded.exp * 1000;
+  } catch {
+    return true;
+  }
+};
+
+const ProtectedRoute = () => {
   const token = localStorage.getItem("token");
-
-  // Token байхгүй бол SignIn page рүү чиглүүлнэ
-  if (!token) {
+  // Token байхгүй, эсвэл expiry болсон бол signin руу явуулах
+  if (!token || isTokenExpired(token)) {
+    localStorage.removeItem("token");
     return <Navigate to="/signin" replace />;
   }
 
-  // Token байгаа бол child route-уудыг харуулна
+  // Token байна, expiry болоогүй бол зөвшөөрөх
   return <Outlet />;
-}
+};
+
+export default ProtectedRoute;
