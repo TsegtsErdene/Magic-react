@@ -8,6 +8,10 @@ import "react-circular-progressbar/dist/styles.css";
 
 type Category = { label: string; value: string };
 
+interface CategoryResponse {
+  CategoryName: string;
+}
+
 
 
 
@@ -47,19 +51,17 @@ const FileUploader: React.FC = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     fetch(`${API_URL}/api/categories`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then(res => res.json())
-    .then(data =>  setCategories(data.map(
-      (c: any) => ({ label: c.CategoryName, value: c.CategoryName })
-    )));
-}, []);
-
-useEffect(() => {
-  console.log("categories UPDATED:", categories);
-}, [categories]);
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data: CategoryResponse[]) =>
+        setCategories(
+          data.map((c) => ({ label: c.CategoryName, value: c.CategoryName }))
+        )
+      );
+  }, []);
   
 
   // Файл нэмэх
@@ -118,26 +120,26 @@ useEffect(() => {
       const formData = new FormData();
       formData.append("file", fileObj.file);
       fileObj.categories.forEach(cat => formData.append("categories[]", cat.value));
-      try {
-        await axios.post(`${API_URL}/api/files/upload`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          onUploadProgress: progressEvent => {
-            const percent = Math.round(
-              (progressEvent.loaded * 100) / (progressEvent.total || 1)
-            );
-            setProgresses(prev => {
-              const copy = [...prev];
-              copy[idx] = percent;
-              return copy;
-            });
-          },
-        });
-        newResults[idx] = "✅ Амжилттай";
-      } catch (e) {
-        newResults[idx] = "❌ Алдаа";
-      }
+        try {
+          await axios.post(`${API_URL}/api/files/upload`, formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            onUploadProgress: (progressEvent) => {
+              const percent = Math.round(
+                (progressEvent.loaded * 100) / (progressEvent.total || 1)
+              );
+              setProgresses((prev) => {
+                const copy = [...prev];
+                copy[idx] = percent;
+                return copy;
+              });
+            },
+          });
+          newResults[idx] = "✅ Амжилттай";
+        } catch {
+          newResults[idx] = "❌ Алдаа";
+        }
     }
     setUploading(false);
     setUploadResults(newResults);
