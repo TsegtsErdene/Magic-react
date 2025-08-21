@@ -8,6 +8,16 @@ import "react-circular-progressbar/dist/styles.css";
 
 type Category = { label: string; value: string };
 
+<<<<<<< HEAD
+=======
+interface CategoryResponse {
+  CategoryName: string;
+}
+
+
+
+
+>>>>>>> da58b1d4271971c37630c7b3bf4344d101331bee
 interface UploadFile {
   file: File;
   name: string;
@@ -41,6 +51,7 @@ const FileUploader: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+<<<<<<< HEAD
     fetch(`${API_URL}/api/categories?availableOnly=1`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -54,6 +65,35 @@ const FileUploader: React.FC = () => {
         )
       )
       .catch(() => setOptions([]));
+=======
+    fetch(`${API_URL}/api/categories`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data: CategoryResponse[]) =>
+        setCategories(
+          data.map((c) => ({ label: c.CategoryName, value: c.CategoryName }))
+        )
+      );
+  }, []);
+  
+
+  // Файл нэмэх
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const filesWithMeta: UploadFile[] = acceptedFiles.map(file => ({
+      file,
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      preview: URL.createObjectURL(file),
+      categories: [],
+    }));
+    setFiles(prev => [...prev, ...filesWithMeta]);
+    setProgresses(prev => [...prev, ...filesWithMeta.map(() => 0)]);
+    setUploadResults(prev => [...prev, ...filesWithMeta.map(() => null)]);
+>>>>>>> da58b1d4271971c37630c7b3bf4344d101331bee
   }, []);
 
   // Add files (auto-apply default categories if enabled)
@@ -118,6 +158,7 @@ const FileUploader: React.FC = () => {
 
       const formData = new FormData();
       formData.append("file", fileObj.file);
+<<<<<<< HEAD
       fileObj.categories.forEach((cat) => formData.append("categories[]", cat.value));
 
       try {
@@ -144,6 +185,29 @@ const FileUploader: React.FC = () => {
       } catch {
         newResults[idx] = "❌ Алдаа";
       } 
+=======
+      fileObj.categories.forEach(cat => formData.append("categories[]", cat.value));
+        try {
+          await axios.post(`${API_URL}/api/files/upload`, formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            onUploadProgress: (progressEvent) => {
+              const percent = Math.round(
+                (progressEvent.loaded * 100) / (progressEvent.total || 1)
+              );
+              setProgresses((prev) => {
+                const copy = [...prev];
+                copy[idx] = percent;
+                return copy;
+              });
+            },
+          });
+          newResults[idx] = "✅ Амжилттай";
+        } catch {
+          newResults[idx] = "❌ Алдаа";
+        }
+>>>>>>> da58b1d4271971c37630c7b3bf4344d101331bee
     }
 
     setUploading(false);

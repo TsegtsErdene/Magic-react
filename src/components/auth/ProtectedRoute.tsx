@@ -1,9 +1,13 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
+interface DecodedToken {
+  exp?: number;
+}
+
 const isTokenExpired = (token: string) => {
   try {
-    const decoded: any = jwtDecode(token);
+    const decoded = jwtDecode<DecodedToken>(token);
     if (!decoded.exp) return true;
     return Date.now() >= decoded.exp * 1000;
   } catch {
