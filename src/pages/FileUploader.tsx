@@ -6,12 +6,13 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import "react-circular-progressbar/dist/styles.css";
 
-type Category = { label: string; value: string; filetype?: string };
+type Category = { label: string; value: string; filetype?: string; projectID?: string };
 
 interface CategoryResponse {
   CategoryName: string;
   filetype?: string;   // server жижиг "filetype"
   FileType?: string;   // эсвэл том "FileType" ирж магадгүй тул fallback
+  projectID?: string;
 }
 
 interface UploadFile {
@@ -52,15 +53,17 @@ const FileUploader: React.FC = () => {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data: CategoryResponse[]) =>
+      .then((data: CategoryResponse[]) => {
+        console.log(data);
         setOptions(
           data.map((c) => ({
             label: c.CategoryName,
             value: c.CategoryName,
+            projectID: c.projectID ?? "",
             filetype: c.filetype ?? c.FileType ?? "",
           }))
-        )
-      )
+        );
+      })
       .catch(() => setOptions([]));
   }, []);
 
@@ -131,6 +134,7 @@ const FileUploader: React.FC = () => {
       // categories[]  +  filetypes[]
       fileObj.categories.forEach((cat) => formData.append("categories[]", cat.value));
       fileObj.categories.forEach((cat) => formData.append("filetypes[]", cat.filetype ?? ""));
+      fileObj.categories.forEach((cat) => formData.append("projects[]", cat.projectID ?? ""));
 
       try {
         await axios.post(`${API_URL}/api/files/upload`, formData, {

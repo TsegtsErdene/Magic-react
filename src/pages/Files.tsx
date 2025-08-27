@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Tab } from "@headlessui/react";
-import { AiOutlineSearch } from "react-icons/ai";
 import { ChevronDown } from "lucide-react";
 import PageMeta from "../components/common/PageMeta";
 
@@ -62,8 +61,8 @@ export default function Files() {
   const [loading, setLoading] = useState(true);
 
   const [tabIndex, setTabIndex] = useState(0);
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [search] = useState("");
+  const [selectedCategory] = useState("");
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
