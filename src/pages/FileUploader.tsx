@@ -6,10 +6,12 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import "react-circular-progressbar/dist/styles.css";
 
-type Category = { label: string; value: string };
+type Category = { label: string; value: string; filetype?: string };
 
 interface CategoryResponse {
   CategoryName: string;
+  filetype?: string;   // server жижиг "filetype"
+  FileType?: string;   // эсвэл том "FileType" ирж магадгүй тул fallback
 }
 
 interface UploadFile {
@@ -43,7 +45,7 @@ const FileUploader: React.FC = () => {
   const [defaultCats, setDefaultCats] = useState<Category[]>([]);
   const [autoApplyDefault, setAutoApplyDefault] = useState<boolean>(true);
 
-  // Категори жагсаалт авах (availableOnly=1 -> хүлээгдэж буй зэргийг нуух)
+  // Категори жагсаалт авах
   useEffect(() => {
     const token = localStorage.getItem("token");
     fetch(`${API_URL}/api/categories?availableOnly=1`, {
@@ -55,13 +57,14 @@ const FileUploader: React.FC = () => {
           data.map((c) => ({
             label: c.CategoryName,
             value: c.CategoryName,
+            filetype: c.filetype ?? c.FileType ?? "",
           }))
         )
       )
       .catch(() => setOptions([]));
   }, []);
 
-  // Файл нэмэх (шинээр нэмэгдэхэд defaultCats-ыг автоматаар тавина)
+  // Файл нэмэх
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       const filesWithMeta: UploadFile[] = acceptedFiles.map((file) => ({
@@ -79,20 +82,20 @@ const FileUploader: React.FC = () => {
     [defaultCats, autoApplyDefault]
   );
 
-  // Одоогоор байгаа бүх файлд defaultCats-ыг оноох товч
+  // Default-ыг бүх файлд хэрэглэх
   const applyDefaultToExisting = () => {
     if (!defaultCats.length) return;
     setFiles((prev) => prev.map((f) => ({ ...f, categories: [...defaultCats] })));
   };
 
-  // Нэг файл дээрх категори өөрчлөх
+  // Нэг файлын категори солих
   const handleCategoryChange = (index: number, categories: MultiValue<Category>) => {
     setFiles((prev) =>
       prev.map((file, i) => (i === index ? { ...file, categories: Array.isArray(categories) ? categories : [] } : file))
     );
   };
 
-  // Файл мөр устгах
+  // Файл устгах
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
     setProgresses((prev) => prev.filter((_, i) => i !== index));
@@ -101,7 +104,7 @@ const FileUploader: React.FC = () => {
 
   const hasFileWithoutCategory = files.some((f) => !f.categories.length);
 
-  // Upload loop (нэг нэгээр)
+  // Upload (нэг нэгээр)
   async function uploadAllFiles() {
     setUploading(true);
     setMessage(null);
@@ -123,7 +126,11 @@ const FileUploader: React.FC = () => {
 
       const formData = new FormData();
       formData.append("file", fileObj.file);
+
+      // ==== B ВАРИАНТ: массив талбарууд ====
+      // categories[]  +  filetypes[]
       fileObj.categories.forEach((cat) => formData.append("categories[]", cat.value));
+      fileObj.categories.forEach((cat) => formData.append("filetypes[]", cat.filetype ?? ""));
 
       try {
         await axios.post(`${API_URL}/api/files/upload`, formData, {
@@ -139,11 +146,8 @@ const FileUploader: React.FC = () => {
         });
         newResults[idx] = "✅ Амжилттай";
 
-        // Амжилттай илгээсэн категорийг сонголтоос хасна (дахин илгээхгүй)
-        setOptions((prev) =>
-          prev.filter((opt) => !fileObj.categories.some((sel) => sel.value === opt.value))
-        );
-        // (Сонголтоор) defaultCats-аас ч бас хасаж болно
+        // Амжилттай илгээсэн категорийг options/default-оос хасах (хүсвэл)
+        setOptions((prev) => prev.filter((opt) => !fileObj.categories.some((sel) => sel.value === opt.value)));
         setDefaultCats((prev) => prev.filter((sel) => !fileObj.categories.some((s) => s.value === sel.value)));
       } catch {
         newResults[idx] = "❌ Алдаа";

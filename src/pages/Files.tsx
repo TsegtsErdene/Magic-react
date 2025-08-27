@@ -51,7 +51,7 @@ function mapCategory(raw: any): CategoryRow {
 function splitCategories(cat: string): string[] {
   if (!cat) return [];
   return cat
-    .split(",")
+    .split(";")
     .map((s) => s.trim())
     .filter(Boolean);
 }
@@ -83,6 +83,7 @@ export default function Files() {
         ]);
         const catJson = await catRes.json();
         const fileJson = await fileRes.json();
+        console.log("dd",fileJson);
 
         setCategories(Array.isArray(catJson) ? catJson.map(mapCategory) : []);
         setFiles(Array.isArray(fileJson) ? fileJson : []);
