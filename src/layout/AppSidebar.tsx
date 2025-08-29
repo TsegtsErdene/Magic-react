@@ -8,7 +8,7 @@ import {
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
-  // ListIcon,
+  ListIcon,
   PageIcon,
   // PieChartIcon,
   // PlugInIcon,
@@ -40,6 +40,11 @@ const navItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Upload",
     path: "/upload",
+  },
+  {
+    name: "Forms",
+    icon: <ListIcon />,
+    path: "/forms",
   },
   // {
   //   icon: <UserCircleIcon />,
