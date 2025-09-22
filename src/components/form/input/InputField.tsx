@@ -14,6 +14,7 @@ interface InputProps {
   step?: number;
   disabled?: boolean;
   success?: boolean;
+  autoComplete?: string; 
   error?: boolean;
   hint?: string;
 }

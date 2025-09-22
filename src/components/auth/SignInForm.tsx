@@ -1,44 +1,83 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import {  useNavigate } from "react-router-dom";
 import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
 
+type LoginResponse =
+  | { token: string; user?: { username?: string; companyId?: string } }
+  | { error: string };
+
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
+  const [isChecked, setIsChecked] = useState(false); // Keep me logged in
+  const [companyId, setCompanyId] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
+
+  // Optional: if you want to prefill companyId from URL like ?cid=ACME
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const cid = url.searchParams.get("cid");
+    if (cid && !companyId) setCompanyId(cid);
+  }, []);
+
+  const canSubmit = useMemo(() => {
+    return companyId.trim() !== "" && username.trim() !== "" && password.trim() !== "" && !loading;
+  }, [companyId, username, password, loading]);
+
+  function persistAuth(token: string, username: string, companyId: string) {
+    const storage = isChecked ? localStorage : sessionStorage;
+    storage.setItem("token", token);
+    storage.setItem("username", username);
+    storage.setItem("companyId", companyId);
+
+    // clear from the other storage to avoid confusion
+    const other = isChecked ? sessionStorage : localStorage;
+    ["token", "username", "companyId"].forEach(k => other.removeItem(k));
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
 
+    if (!canSubmit) {
+      setMsg("Please fill in all required fields.");
+      return;
+    }
+
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, { // API endpoint-ээ өөрчилж тохируул
+      setLoading(true);
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        // ⬇️ Backend must accept companyId as well
+        body: JSON.stringify({ companyId: companyId.trim(), username: username.trim(), password }),
       });
-      const data = await res.json();
-      if (res.ok && data.token) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("username", username);
+
+      const data: LoginResponse = await res.json();
+
+      if (res.ok && "token" in data && data.token) {
+        persistAuth(data.token, username.trim(), companyId.trim());
         navigate("/");
       } else {
-        setMsg(data.error || "Нэвтрэхэд алдаа гарлаа.");
+        const err =
+          (!res.ok && typeof (data as any)?.error === "string" && (data as any).error) ||
+          "Нэвтрэхэд алдаа гарлаа.";
+        setMsg(err);
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setMsg(err.message);
-      } else {
-        setMsg("Сүлжээний алдаа.");
-      }
+      if (err instanceof Error) setMsg(err.message);
+      else setMsg("Сүлжээний алдаа.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -51,24 +90,40 @@ export default function SignInForm() {
               Sign In
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your email and password to sign in!
+              Enter your company ID, email and password to sign in!
             </p>
           </div>
+
           <div>
             {/* LOGIN FORM */}
-            <form onSubmit={handleLogin}>
+            <form onSubmit={handleLogin} noValidate>
               <div className="space-y-6">
+                <div>
+                  <Label>
+                    Company ID <span className="text-error-500">*</span>
+                  </Label>
+                  <Input
+                    placeholder="3252451"
+                    type="text"
+                    value={companyId}
+                    onChange={e => setCompanyId(e.target.value)}
+                    autoComplete="organization"
+                  />
+                </div>
+
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>
                   </Label>
                   <Input
                     placeholder="info@gmail.com"
-                    type="text"
+                    type="email"
                     value={username}
                     onChange={e => setUsername(e.target.value)}
+                    autoComplete="username"
                   />
                 </div>
+
                 <div>
                   <Label>
                     Password <span className="text-error-500">*</span>
@@ -79,19 +134,23 @@ export default function SignInForm() {
                       placeholder="Enter your password"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
+                      autoComplete="current-password"
                     />
-                    <span
+                    <button
+                      type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
                         <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
                       ) : (
                         <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
                       )}
-                    </span>
+                    </button>
                   </div>
                 </div>
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Checkbox checked={isChecked} onChange={setIsChecked} />
@@ -99,26 +158,39 @@ export default function SignInForm() {
                       Keep me logged in
                     </span>
                   </div>
-                  <Link
+                  {/* <Link
                     to="/reset-password"
                     className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                   >
                     Forgot password?
-                  </Link>
+                  </Link> */}
                 </div>
+
                 <div>
-                  <Button className="w-full" size="sm" type="submit">
-                    Sign in
+                  <Button className="w-full" size="sm" type="submit" disabled={!canSubmit}>
+                    {loading ? "Signing in..." : "Sign in"}
                   </Button>
                 </div>
+
                 {msg && (
-                  <div className="mt-2 rounded text-center bg-red-100 text-red-600 py-2 px-3">
+                  <div
+                    className={`mt-2 rounded text-center py-2 px-3 ${
+                      msg.toLowerCase().includes("success")
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-600"
+                    }`}
+                  >
                     {msg}
                   </div>
                 )}
               </div>
             </form>
           </div>
+
+          {/* Optional: small hint
+          <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+            Trouble signing in? Make sure your Company ID matches your tenant or subdomain.
+          </p> */}
         </div>
       </div>
     </div>
