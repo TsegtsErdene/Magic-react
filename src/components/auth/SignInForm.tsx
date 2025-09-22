@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
-import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
 
 type LoginResponse =
@@ -12,7 +11,6 @@ type LoginResponse =
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false); // Keep me logged in
   const [companyId, setCompanyId] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -22,26 +20,28 @@ export default function SignInForm() {
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Optional: if you want to prefill companyId from URL like ?cid=ACME
+  // Prefill companyId from URL like ?cid=ACME (optional)
   useEffect(() => {
     const url = new URL(window.location.href);
     const cid = url.searchParams.get("cid");
     if (cid && !companyId) setCompanyId(cid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const canSubmit = useMemo(() => {
-    return companyId.trim() !== "" && username.trim() !== "" && password.trim() !== "" && !loading;
+    return (
+      companyId.trim() !== "" &&
+      username.trim() !== "" &&
+      password.trim() !== "" &&
+      !loading
+    );
   }, [companyId, username, password, loading]);
 
-  function persistAuth(token: string, username: string, companyId: string) {
-    const storage = isChecked ? localStorage : sessionStorage;
-    storage.setItem("token", token);
-    storage.setItem("username", username);
-    storage.setItem("companyId", companyId);
-
-    // clear from the other storage to avoid confusion
-    const other = isChecked ? sessionStorage : localStorage;
-    ["token", "username", "companyId"].forEach(k => other.removeItem(k));
+  function persistAuth(token: string, uname: string, cid: string) {
+    // ✔ Always persist to localStorage
+    localStorage.setItem("token", token);
+    localStorage.setItem("username", uname);
+    localStorage.setItem("companyId", cid);
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -58,8 +58,11 @@ export default function SignInForm() {
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // ⬇️ Backend must accept companyId as well
-        body: JSON.stringify({ companyId: companyId.trim(), username: username.trim(), password }),
+        body: JSON.stringify({
+          companyId: companyId.trim(),
+          username: username.trim(),
+          password,
+        }),
       });
 
       const data: LoginResponse = await res.json();
@@ -69,7 +72,9 @@ export default function SignInForm() {
         navigate("/");
       } else {
         const err =
-          (!res.ok && typeof (data as any)?.error === "string" && (data as any).error) ||
+          (!res.ok &&
+            typeof (data as any)?.error === "string" &&
+            (data as any).error) ||
           "Нэвтрэхэд алдаа гарлаа.";
         setMsg(err);
       }
@@ -106,7 +111,7 @@ export default function SignInForm() {
                     placeholder="3252451"
                     type="text"
                     value={companyId}
-                    onChange={e => setCompanyId(e.target.value)}
+                    onChange={(e) => setCompanyId(e.target.value)}
                     autoComplete="organization"
                   />
                 </div>
@@ -119,7 +124,7 @@ export default function SignInForm() {
                     placeholder="info@gmail.com"
                     type="email"
                     value={username}
-                    onChange={e => setUsername(e.target.value)}
+                    onChange={(e) => setUsername(e.target.value)}
                     autoComplete="username"
                   />
                 </div>
@@ -133,7 +138,7 @@ export default function SignInForm() {
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={password}
-                      onChange={e => setPassword(e.target.value)}
+                      onChange={(e) => setPassword(e.target.value)}
                       autoComplete="current-password"
                     />
                     <button
@@ -151,20 +156,7 @@ export default function SignInForm() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Checkbox checked={isChecked} onChange={setIsChecked} />
-                    <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                      Keep me logged in
-                    </span>
-                  </div>
-                  {/* <Link
-                    to="/reset-password"
-                    className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                  >
-                    Forgot password?
-                  </Link> */}
-                </div>
+                {/* Removed "Keep me logged in" section */}
 
                 <div>
                   <Button className="w-full" size="sm" type="submit" disabled={!canSubmit}>
@@ -187,7 +179,7 @@ export default function SignInForm() {
             </form>
           </div>
 
-          {/* Optional: small hint
+          {/* Optional helper text
           <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
             Trouble signing in? Make sure your Company ID matches your tenant or subdomain.
           </p> */}
