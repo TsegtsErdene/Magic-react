@@ -21,6 +21,7 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Files from "./pages/Files";
 import FileUploader from "./pages/FileUploader";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import ChatPage from "./pages/Chat";
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/forms" element={<FormPage />} />
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
+            <Route path="/chat" element={<ChatPage />} />
             <Route path="/upload" element={<FileUploader />} />
             <Route path="/blank" element={<Blank />} />
             <Route path="/form-elements" element={<FormElements />} />

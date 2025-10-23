@@ -6,7 +6,7 @@ import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
 
 type LoginResponse =
-  | { token: string; user?: { username?: string; companyId?: string } }
+  | { token: string; user?: { username?: string; companyId?: string; projectName?: string } }
   | { error: string };
 
 export default function SignInForm() {
@@ -37,11 +37,13 @@ export default function SignInForm() {
     );
   }, [companyId, username, password, loading]);
 
-  function persistAuth(token: string, uname: string, cid: string) {
+  function persistAuth(token: string, uname: string, cid: string, pname:string) {
     // ✔ Always persist to localStorage
     localStorage.setItem("token", token);
     localStorage.setItem("username", uname);
     localStorage.setItem("companyId", cid);
+    localStorage.setItem("projectName", pname);
+
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -68,7 +70,8 @@ export default function SignInForm() {
       const data: LoginResponse = await res.json();
 
       if (res.ok && "token" in data && data.token) {
-        persistAuth(data.token, username.trim(), companyId.trim());
+        const pname = ("user" in data && data.user?.projectName) ? data.user.projectName : "";
+        persistAuth(data.token, username.trim(), companyId.trim(), pname.trim());
         navigate("/");
       } else {
         const err =
