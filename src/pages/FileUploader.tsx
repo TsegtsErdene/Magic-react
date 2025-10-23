@@ -49,7 +49,7 @@ const FileUploader: React.FC = () => {
   // Категори жагсаалт авах
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(`${API_URL}/api/categories?availableOnly=1`, {
+    fetch(`${API_URL}/api/categories`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())

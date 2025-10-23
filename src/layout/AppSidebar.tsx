@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
 import {
-   BoxCubeIcon,
+   //BoxCubeIcon,
   // CalenderIcon,
   ChevronDownIcon,
   GridIcon,
@@ -46,16 +46,16 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     path: "/forms",
   },
-   {
-    name: "Forms",
-    icon: <ListIcon />,
-    path: "/forms",
-  },
-  {
-    name: "Chat",
-    icon: <BoxCubeIcon />,
-    path: "/chat",
-  }
+  //  {
+  //   name: "Forms",
+  //   icon: <ListIcon />,
+  //   path: "/forms",
+  // },
+  // {
+  //   name: "Chat",
+  //   icon: <BoxCubeIcon />,
+  //   path: "/chat",
+  // }
   // {
   //   icon: <UserCircleIcon />,
   //   name: "User Profile",
