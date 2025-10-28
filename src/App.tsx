@@ -22,6 +22,7 @@ import Files from "./pages/Files";
 import FileUploader from "./pages/FileUploader";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ChatPage from "./pages/Chat";
+import TemplateDownloader from "./pages/Template";
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
             <Route index path="/" element={<Files />} />
             {/* Бусад page-ууд... */}
             <Route path="/forms" element={<FormPage />} />
+            <Route path="/template" element={<TemplateDownloader />} />
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/chat" element={<ChatPage />} />
