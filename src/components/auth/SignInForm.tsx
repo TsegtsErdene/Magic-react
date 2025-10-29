@@ -5,8 +5,11 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
 
+type UserInfo = { username?: string; companyId?: string; projectName?: string };
+
 type LoginResponse =
-  | { token: string; user?: { username?: string; companyId?: string; projectName?: string } }
+  | { token: string; user?: UserInfo }
+  | { requiresPasswordChange: true; changeToken: string; user: UserInfo }
   | { error: string };
 
 export default function SignInForm() {
@@ -20,7 +23,6 @@ export default function SignInForm() {
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Prefill companyId from URL like ?cid=ACME (optional)
   useEffect(() => {
     const url = new URL(window.location.href);
     const cid = url.searchParams.get("cid");
@@ -28,22 +30,20 @@ export default function SignInForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const canSubmit = useMemo(() => {
-    return (
+  const canSubmit = useMemo(
+    () =>
       companyId.trim() !== "" &&
       username.trim() !== "" &&
       password.trim() !== "" &&
-      !loading
-    );
-  }, [companyId, username, password, loading]);
+      !loading,
+    [companyId, username, password, loading]
+  );
 
-  function persistAuth(token: string, uname: string, cid: string, pname:string) {
-    // ✔ Always persist to localStorage
+  function persistAuth(token: string, uname: string, cid: string, pname: string) {
     localStorage.setItem("token", token);
     localStorage.setItem("username", uname);
     localStorage.setItem("companyId", cid);
     localStorage.setItem("projectName", pname);
-
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -69,21 +69,30 @@ export default function SignInForm() {
 
       const data: LoginResponse = await res.json();
 
+      // ✅ A) Анхны нэвтрэлт — солиулах шаардлагатай
+      if (res.ok && "requiresPasswordChange" in data && data.requiresPasswordChange) {
+        sessionStorage.setItem("changeToken", data.changeToken);
+        sessionStorage.setItem("changeUser", JSON.stringify(data.user || {}));
+        navigate("/password/change");
+        return;
+      }
+
+      // ✅ B) Энгийн нэвтрэлт — токентой
       if (res.ok && "token" in data && data.token) {
-        const pname = ("user" in data && data.user?.projectName) ? data.user.projectName : "";
+        const pname =
+          "user" in data && data.user?.projectName ? data.user.projectName! : "";
         persistAuth(data.token, username.trim(), companyId.trim(), pname.trim());
         navigate("/");
-      } else {
-        const err =
-          (!res.ok &&
-            typeof (data as any)?.error === "string" &&
-            (data as any).error) ||
-          "Нэвтрэхэд алдаа гарлаа.";
-        setMsg(err);
+        return;
       }
+
+      // ❌ Алдаа
+      const err =
+        (!res.ok && typeof (data as any)?.error === "string" && (data as any).error) ||
+        "Нэвтрэхэд алдаа гарлаа.";
+      setMsg(err);
     } catch (err: unknown) {
-      if (err instanceof Error) setMsg(err.message);
-      else setMsg("Сүлжээний алдаа.");
+      setMsg(err instanceof Error ? err.message : "Сүлжээний алдаа.");
     } finally {
       setLoading(false);
     }
@@ -103,7 +112,6 @@ export default function SignInForm() {
           </div>
 
           <div>
-            {/* LOGIN FORM */}
             <form onSubmit={handleLogin} noValidate>
               <div className="space-y-6">
                 <div>
@@ -159,8 +167,6 @@ export default function SignInForm() {
                   </div>
                 </div>
 
-                {/* Removed "Keep me logged in" section */}
-
                 <div>
                   <Button className="w-full" size="sm" type="submit" disabled={!canSubmit}>
                     {loading ? "Signing in..." : "Sign in"}
@@ -181,11 +187,6 @@ export default function SignInForm() {
               </div>
             </form>
           </div>
-
-          {/* Optional helper text
-          <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-            Trouble signing in? Make sure your Company ID matches your tenant or subdomain.
-          </p> */}
         </div>
       </div>
     </div>

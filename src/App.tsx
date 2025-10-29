@@ -23,6 +23,7 @@ import FileUploader from "./pages/FileUploader";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ChatPage from "./pages/Chat";
 import TemplateDownloader from "./pages/Template";
+import ChangePassword from "./pages/AuthPages/ChangePassword";
 
 export default function App() {
   return (
@@ -58,6 +59,7 @@ export default function App() {
         {/* Auth routes */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/password/change" element={<ChangePassword />} />
 
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />
