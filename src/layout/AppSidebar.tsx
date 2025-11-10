@@ -42,9 +42,17 @@ const navItems: NavItem[] = [
     path: "/upload",
   },
   {
-    name: "Forms",
     icon: <ListIcon />,
+    name: "Forms",
     path: "/forms",
+    subItems: [
+      { name: "АОУС-240 Залилангийн эрсдлийн үнэлгээний Асуулга", path: "/AOUS-240" },
+      { name: "АОУС-260 Засаглах удирдлага", path: "/AOUS-260" },
+      { name: "АОУС-265 Дотоод хяналт", path: "/AOUS-265" },
+      { name: "АОУС-560 Балансын дараах үйл явдал", path: "/AOUS-560" },
+      { name: "Мэдээлэл технологийн үнэлгээ", path: "/MTU" },
+      { name: "Хуулчийн захидал", path: "/HZ" },
+    ],
   },
   //  {
   //   name: "Forms",
@@ -115,34 +123,33 @@ const AppSidebar: React.FC = () => {
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // const isActive = (path: string) => location.pathname === path;
-  const isActive = useCallback(
-    (path: string) => location.pathname === path,
-    [location.pathname]
-  );
+const isActive = useCallback((path?: string) => {
+  if (!path) return false;
+  const normalize = (p: string) => (p === "/" ? "/" : p.replace(/\/+$/, ""));
+  const current = normalize(location.pathname);
+  const target = normalize(path);
+  return current === target || current.startsWith(target + "/");
+}, [location.pathname]);
 
-  useEffect(() => {
-    let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
-      items.forEach((nav, index) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType as "main" | "others",
-                index,
-              });
-              submenuMatched = true;
-            }
-          });
-        }
-      });
+useEffect(() => {
+  let submenuMatched = false;
+  ["main", "others"].forEach((menuType) => {
+    const items = menuType === "main" ? navItems : othersItems;
+    items.forEach((nav, index) => {
+      if (nav.subItems) {
+        nav.subItems.forEach((subItem) => {
+          const fullPath = (nav.path || "") + subItem.path; // <--- important
+          if (isActive(fullPath)) {
+            setOpenSubmenu({ type: menuType as "main" | "others", index });
+            submenuMatched = true;
+          }
+        });
+      }
     });
+  });
 
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
-  }, [location, isActive]);
+  if (!submenuMatched) setOpenSubmenu(null);
+}, [location.pathname, isActive]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -246,44 +253,20 @@ const AppSidebar: React.FC = () => {
               }}
             >
               <ul className="mt-2 space-y-1 ml-9">
-                {nav.subItems.map((subItem) => (
-                  <li key={subItem.name}>
-                    <Link
-                      to={subItem.path}
-                      className={`menu-dropdown-item ${
-                        isActive(subItem.path)
-                          ? "menu-dropdown-item-active"
-                          : "menu-dropdown-item-inactive"
-                      }`}
-                    >
-                      {subItem.name}
-                      <span className="flex items-center gap-1 ml-auto">
-                        {subItem.new && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            new
-                          </span>
-                        )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            pro
-                          </span>
-                        )}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
+                {nav.subItems.map((subItem) => {
+  const fullPath = `${nav.path ?? ""}${subItem.path}`; // e.g. "/forms" + "/AOUS-240" => "/forms/AOUS-240"
+  return (
+    <li key={subItem.name}>
+      <Link
+        to={fullPath}
+        className={`menu-dropdown-item ${isActive(fullPath) ? "menu-dropdown-item-active" : "menu-dropdown-item-inactive"}`}
+      >
+        {subItem.name}
+        {/* badges */}
+      </Link>
+    </li>
+  );
+})}
               </ul>
             </div>
           )}
