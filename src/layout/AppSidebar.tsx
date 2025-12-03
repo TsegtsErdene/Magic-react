@@ -12,7 +12,7 @@ import {
   PageIcon,
   // PieChartIcon,
   // PlugInIcon,
-  // TableIcon,
+   TableIcon,
   // UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
@@ -63,6 +63,11 @@ const navItems: NavItem[] = [
     name: "Template",
     icon: <BoxCubeIcon />,
     path: "/template",
+  },
+  {
+    name: "Report",
+    icon: <TableIcon />,
+    path: "/report",
   }
   // {
   //   icon: <UserCircleIcon />,

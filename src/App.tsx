@@ -24,6 +24,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ChatPage from "./pages/Chat";
 import TemplateDownloader from "./pages/Template";
 import ChangePassword from "./pages/AuthPages/ChangePassword";
+import ReportTemplates from "./pages/ReportTemplates";
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index path="/" element={<Files />} />
             {/* Бусад page-ууд... */}
+            <Route path="/report" element={<ReportTemplates />} /> 
             <Route path="/template" element={<TemplateDownloader />} />
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />

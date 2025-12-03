@@ -8,7 +8,7 @@ type FileRow = {
   // file.category талбар нь "A,B,C" гэх мэт олон утга байж болно
   category: string;
   filename: string;
-  status: "Хүлээгдэж буй" | "Баталсан" | "Цуцалсан" | "Шаардлага хангаагүй" | string;
+  status: "Хүлээгдэж буй" | "Баталсан" | "Цуцалсан" | "Шаардлага хангаагүй" | "Хэрэггүй" | "Хэрэггүй" |string;
   blobPath: string;
   uploadedAt: string;
   comment?: string;
@@ -28,11 +28,12 @@ const viewLabels = [
   "Илгээгээгүй",
   "Хүлээгдэж буй",
   "Баталсан",
-  "Цуцалсан",
+  "Дутуу",
   "Шаардлага хангаагүй",
+  "Хэрэггүй"
 ] as const;
 
-const statusFilter = ["", "Илгээгээгүй","Хүлээгдэж буй", "Баталсан", "Цуцалсан", "Шаардлага хангаагүй"] as const;
+const statusFilter = ["", "Илгээгээгүй","Хүлээгдэж буй", "Баталсан", "Дутуу", "Шаардлага хангаагүй", "Хэрэггүй"] as const;
 
 function cx(...xs: (string | false | null | undefined)[]) {
   return xs.filter(Boolean).join(" ");
@@ -150,8 +151,9 @@ export default function Files() {
       "Илгээгээгүй": 0,
       "Хүлээгдэж буй": 0,
       "Баталсан": 0,
-      "Цуцалсан": 0,
       "Шаардлага хангаагүй": 0,
+      "Дутуу": 0,
+      "Хэрэггүй":0,
     };
     allCategoryNames.forEach((name) => {
       const meta = categoryMeta.get(name);
