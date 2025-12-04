@@ -25,6 +25,7 @@ import ChatPage from "./pages/Chat";
 import TemplateDownloader from "./pages/Template";
 import ChangePassword from "./pages/AuthPages/ChangePassword";
 import ReportTemplates from "./pages/ReportTemplates";
+import AuditDashboard from "./pages/AuditDashboard";
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="/template" element={<TemplateDownloader />} />
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
+            <Route path="/dashboard" element={<AuditDashboard />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/upload" element={<FileUploader />} />
             <Route path="/blank" element={<Blank />} />
