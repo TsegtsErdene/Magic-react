@@ -269,7 +269,7 @@ const AuditDashboard = () => {
                   <td className="px-6 py-4 text-sm text-gray-500 italic">{file.comment || "-"}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end space-x-2">
-                      <button
+                      {/* <button
                         onClick={() => triggerFileInput(index)}
                         disabled={uploadStatus[index]?.isLoading}
                         className={`inline-flex items-center space-x-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${
@@ -295,7 +295,7 @@ const AuditDashboard = () => {
                             <span>Upload</span>
                           </>
                         )}
-                      </button>
+                      </button> */}
 
                       <input
                         ref={(el) => { if (el) fileInputRefs.current[index] = el; }}
