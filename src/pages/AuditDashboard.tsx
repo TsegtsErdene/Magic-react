@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 
-// Define types for TypeScript (so it doesn't complain)
 interface DashboardStats {
   TotalRequired: number;
   CountMissing: number;
@@ -26,8 +25,10 @@ interface UploadStatus {
     isLoading: boolean;
     success: boolean;
     error: string | null;
-  };
+  } | undefined;
 }
+
+const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const AuditDashboard = () => {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -36,93 +37,79 @@ const AuditDashboard = () => {
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>({});
   const fileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
 
+  // helper to get token (supports either `token` or `user` object)
+  const getToken = () => {
+    const rawUser = localStorage.getItem('user');
+    const tokenFromKey = localStorage.getItem('token');
+    if (tokenFromKey) return tokenFromKey;
+    if (rawUser) {
+      try {
+        const parsed = JSON.parse(rawUser);
+        return parsed?.token || parsed?.accessToken || null;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  };
+
   useEffect(() => {
+    let cancelled = false;
     const fetchData = async () => {
       try {
-        // 1. Get the Auth Token from localStorage
-        const storedUser = localStorage.getItem('user');
-        const token = localStorage.getItem('token') || (storedUser ? JSON.parse(storedUser).token : null);
-        
-        // 2. Determine API URL (Default to localhost if env is missing)
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const token = getToken();
+        const apiUrl = getApiUrl();
 
-        // 3. Fetch Data
-        const response = await axios.get(`${apiUrl}/api/dashboard/stats`, {
-            headers: { Authorization: `Bearer ${token}` }
+        const response = await axios.get<DashboardData>(`${apiUrl}/api/dashboard/stats`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
-        
-        setData(response.data);
-        setLoading(false);
+
+        if (!cancelled) {
+          setData(response.data);
+          setLoading(false);
+        }
       } catch (err) {
         console.error("Error fetching dashboard", err);
-        
-        // Show mock data for development/demo purposes
-        // Based on Power BI measurements:
-        // - Баталсан: COUNT(MaterialList) where status = 'Баталсан'
-        // - Хүлээгдэж буй: COUNT(MaterialList) where status = 'Хүлээгдэж буй'
-        // - Буцаасан + Дутуу: COUNT(MaterialList) where status IN ('Шаардлага хангаагүй', 'Дутуу')
-        // - Ирүүлээгүй: COUNT(MaterialList) where status = 'Илгээгээгүй'
-        // - Нийт ирүүлэх: COUNT(MaterialList) where status != 'Хэрэггүй'
+
+        // If fetch fails, fall back to mock data (as you had before)
         const mockData: DashboardData = {
           stats: {
-            TotalRequired: 18,  // Нийт ирүүлэх - All items except "Хэрэггүй"
-            CountMissing: 5,    // Ирүүлээгүй - Items with status 'Илгээгээгүй'
-            CountPending: 4,    // Хүлээгдэж буй - Items with status 'Хүлээгдэж буй'
-            CountApproved: 6,   // Баталсан - Items with status 'Баталсан'
-            CountActionNeeded: 3 // Буцаасан + Дутуу - Items with status 'Шаардлага хангаагүй' or 'Дутуу'
+            TotalRequired: 18,
+            CountMissing: 5,
+            CountPending: 4,
+            CountApproved: 6,
+            CountActionNeeded: 3
           },
           missingFiles: [
-            {
-              CategoryName: "АОУС-240 Залилангийн эрсдлийн үнэлгээний Асуулга",
-              DueDate: "2025-12-15",
-              comment: "Please upload the completed questionnaire"
-            },
-            {
-              CategoryName: "АОУС-260 Засаглах удирдлага",
-              DueDate: "2025-12-20",
-              comment: null
-            },
-            {
-              CategoryName: "Хуулчийн захидал",
-              DueDate: "2025-12-10",
-              comment: "Urgent - overdue"
-            },
-            {
-              CategoryName: "АОУС-265 Дотоод хяналт",
-              DueDate: "2025-12-25",
-              comment: "Waiting for revision"
-            },
-            {
-              CategoryName: "Мэдээлэл технологийн үнэлгээ",
-              DueDate: "2025-12-18",
-              comment: null
-            }
+            { CategoryName: "АОУС-240 Залилангийн эрсдлийн үнэлгээний Асуулга", DueDate: "2025-12-15", comment: "Please upload the completed questionnaire" },
+            { CategoryName: "АОУС-260 Засаглах удирдлага", DueDate: "2025-12-20", comment: null },
+            { CategoryName: "Хуулчийн захидал", DueDate: "2025-12-10", comment: "Urgent - overdue" },
+            { CategoryName: "АОУС-265 Дотоод хяналт", DueDate: "2025-12-25", comment: "Waiting for revision" },
+            { CategoryName: "Мэдээлэл технологийн үнэлгээ", DueDate: "2025-12-18", comment: null }
           ]
         };
-        
-        setData(mockData);
-        setError(null);
-        setLoading(false);
+
+        if (!cancelled) {
+          setData(mockData);
+          setError(null);
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
+    return () => { cancelled = true; };
   }, []);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, fileIndex: number) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Set loading status
-    setUploadStatus(prev => ({
-      ...prev,
-      [fileIndex]: { isLoading: true, success: false, error: null }
-    }));
+    setUploadStatus(prev => ({ ...prev, [fileIndex]: { isLoading: true, success: false, error: null } }));
 
     try {
-      const storedUser = localStorage.getItem('user');
-      const token = localStorage.getItem('token') || (storedUser ? JSON.parse(storedUser).token : null);
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const token = getToken();
+      const apiUrl = getApiUrl();
 
       const formData = new FormData();
       formData.append('file', file);
@@ -130,44 +117,38 @@ const AuditDashboard = () => {
 
       const response = await axios.post(`${apiUrl}/api/files/upload`, formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
+          Authorization: token ? `Bearer ${token}` : '',
+          // DO NOT set Content-Type manually; browser will set boundary
         }
       });
 
-      // Success
-      setUploadStatus(prev => ({
-        ...prev,
-        [fileIndex]: { isLoading: false, success: true, error: null }
-      }));
+      setUploadStatus(prev => ({ ...prev, [fileIndex]: { isLoading: false, success: true, error: null } }));
 
-      // Clear success message after 3 seconds
+      // Optionally: update UI to remove that missing file or mark as uploaded
+      // For demo, we keep it and show success message.
+
       setTimeout(() => {
-        setUploadStatus(prev => ({
-          ...prev,
-          [fileIndex]: { isLoading: false, success: false, error: null }
-        }));
+        setUploadStatus(prev => ({ ...prev, [fileIndex]: { isLoading: false, success: false, error: null } }));
       }, 3000);
 
       console.log('File uploaded:', response.data);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Upload failed';
-      setUploadStatus(prev => ({
-        ...prev,
-        [fileIndex]: { isLoading: false, success: false, error: errorMessage }
-      }));
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Upload failed';
+      setUploadStatus(prev => ({ ...prev, [fileIndex]: { isLoading: false, success: false, error: errorMessage } }));
 
-      // Clear error message after 3 seconds
       setTimeout(() => {
-        setUploadStatus(prev => ({
-          ...prev,
-          [fileIndex]: { isLoading: false, success: false, error: null }
-        }));
+        setUploadStatus(prev => ({ ...prev, [fileIndex]: { isLoading: false, success: false, error: null } }));
       }, 3000);
+    } finally {
+      // reset input reliably using the ref if available
+      const inputRef = fileInputRefs.current[fileIndex];
+      if (inputRef) {
+        inputRef.value = '';
+      } else {
+        // fallback: event.target.value reset
+        try { event.target.value = ''; } catch (e) { /* ignore */ }
+      }
     }
-
-    // Reset file input
-    event.target.value = '';
   };
 
   const triggerFileInput = (fileIndex: number) => {
@@ -193,15 +174,15 @@ const AuditDashboard = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+      {/* ... (UI same as your original) ... */}
+      {/* For brevity, reuse your original JSX below unchanged except file input ref assignment */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-800">📊 Audit Status Dashboard</h2>
         <p className="text-gray-600 mt-2">Real-time overview of your audit document submissions.</p>
       </div>
 
-      {/* --- SECTION 1: KPI CARDS --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        
-        {/* Approved Card */}
+        {/* Approved */}
         <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
@@ -215,7 +196,7 @@ const AuditDashboard = () => {
           <p className="text-sm text-green-600 mt-4 font-medium">✓ Files verified</p>
         </div>
 
-        {/* Pending Card */}
+        {/* Pending */}
         <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
@@ -229,7 +210,7 @@ const AuditDashboard = () => {
           <p className="text-sm text-yellow-600 mt-4 font-medium">⏳ Waiting for auditor</p>
         </div>
 
-        {/* Action Needed Card */}
+        {/* Action Needed */}
         <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-red-500 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
@@ -243,7 +224,7 @@ const AuditDashboard = () => {
           <p className="text-sm text-red-600 mt-4 font-medium">⚠ Rejected / Incomplete</p>
         </div>
 
-        {/* Missing Card */}
+        {/* Missing */}
         <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-gray-400 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
@@ -258,7 +239,6 @@ const AuditDashboard = () => {
         </div>
       </div>
 
-      {/* --- SECTION 2: MISSING FILES TABLE --- */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
         <div className="px-6 py-5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
           <div className="flex items-center space-x-3">
@@ -268,7 +248,7 @@ const AuditDashboard = () => {
             {missingFiles.length} Pending
           </span>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -289,7 +269,6 @@ const AuditDashboard = () => {
                   <td className="px-6 py-4 text-sm text-gray-500 italic">{file.comment || "-"}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end space-x-2">
-                      {/* Upload Button */}
                       <button
                         onClick={() => triggerFileInput(index)}
                         disabled={uploadStatus[index]?.isLoading}
@@ -318,18 +297,14 @@ const AuditDashboard = () => {
                         )}
                       </button>
 
-                      {/* Hidden File Input */}
                       <input
-                        ref={(el) => {
-                          if (el) fileInputRefs.current[index] = el;
-                        }}
+                        ref={(el) => { if (el) fileInputRefs.current[index] = el; }}
                         type="file"
                         onChange={(e) => handleUpload(e, index)}
                         className="hidden"
                         accept=".pdf,.doc,.docx,.xlsx,.xls,.txt,.jpg,.png,.gif"
                       />
 
-                      {/* Status Indicator */}
                       {uploadStatus[index]?.success && (
                         <div className="flex items-center space-x-1">
                           <span className="text-green-600 bg-green-50 px-3 py-1 rounded-md text-xs border border-green-100 font-medium flex items-center space-x-1">
